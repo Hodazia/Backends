@@ -1,30 +1,44 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
+// attach user to Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { email: string };
+    }
+  }
+}
 
 export const AuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    console.log("token..", token);
-
-    if (!token) {
-      res.status(400).json({
-        message: "Bad token Request"
-      });
-      return;
+    const authHeader = req.headers["authorization"] || req.headers["Authorization"];
+    if (!authHeader || typeof authHeader !== "string") {
+      return res.status(401).json({ message: "Authorization header missing" });
     }
-    const decoded = jwt.verify(token, 'zia21') as { id: string };
-    // 
-    console.log("what is inside decoded  ", decoded);
-    //@ts-ignore
-    req.userId = decoded.id;
+
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+      return res.status(401).json({ message: "Malformed Authorization header. Expect 'Bearer <token>'" });
+    }
+
+    const token = parts[1];
+    const secret = process.env.JWT_SECRET || "zia21";
+
+    const decoded = jwt.verify(token, secret) as { email?: string; iat?: number; exp?: number };
+
+    if (!decoded || typeof decoded.email !== "string") {
+      return res.status(403).json({ message: "Invalid token payload" });
+    }
+
+    // attach to req
+    req.user = { email: decoded.email };
+
     next();
-}
-    catch(e)
-    {
-        res.status(401).json({ message: "Invalid token" });
-    }
-}
+  } catch (err: any) {
+    // jwt.verify throws for invalid/expired tokens
+    return res.status(403).json({ message: "Invalid or expired token", details: err.message });
+  }
+};
