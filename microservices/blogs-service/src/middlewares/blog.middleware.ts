@@ -35,6 +35,7 @@ export const AuthMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     // attach to req
     req.user = { email: decoded.email };
+    console.log("the user in the middleware is ", req.user);
 
     next();
   } catch (err: any) {

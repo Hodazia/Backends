@@ -8,7 +8,8 @@ import {
   getAllBlogs,
   getBlog,
   updateBlog,
-  deleteBlog
+  deleteBlog,
+  Fetchuser
 } from "../controllers/blog.controller";
 
 const router = Router();
@@ -40,4 +41,7 @@ router.put("/:id", upload.single("hero"), validateBody(updateSchema), updateBlog
 // Delete
 router.delete("/:id", deleteBlog);
 
+
+//Fetch the blogs of a particular user or the current user
+router.get("/myblogs", Fetchuser);
 export default router;

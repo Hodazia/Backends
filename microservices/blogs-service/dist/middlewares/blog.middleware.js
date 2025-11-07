@@ -25,6 +25,7 @@ const AuthMiddleware = (req, res, next) => {
         }
         // attach to req
         req.user = { email: decoded.email };
+        console.log("the user in the middleware is ", req.user);
         next();
     }
     catch (err) {

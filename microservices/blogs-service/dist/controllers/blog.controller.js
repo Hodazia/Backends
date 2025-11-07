@@ -3,13 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBlog = exports.updateBlog = exports.getAllBlogs = exports.getBlog = exports.createBlog = void 0;
+exports.Fetchuser = exports.deleteBlog = exports.updateBlog = exports.getAllBlogs = exports.getBlog = exports.createBlog = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const cloudinary_1 = require("../utils/cloudinary");
 /**
  Create blog
  expects req.user.email from auth middleware
  optional req.file (multer memory)
+
+
+ user
  */
 const createBlog = async (req, res) => {
     try {
@@ -54,6 +57,20 @@ const getBlog = async (req, res) => {
     }
 };
 exports.getBlog = getBlog;
+/*
+
+{
+        "id": 1,
+        "userid": "nayab25@gmail.com",
+        "title": "My First Blog",
+        "content": "This is my first blog post using microservices",
+        "heroUrl": null,
+        "heroPublicId": null,
+        "createdAt": "2025-11-06T07:35:05.205Z",
+        "updatedAt": "2025-11-06T07:35:05.205Z"
+    }
+
+*/
 const getAllBlogs = async (req, res) => {
     try {
         const blogs = await prisma_1.default.blog.findMany({ orderBy: { createdAt: "desc" } });
@@ -126,3 +143,36 @@ const deleteBlog = async (req, res) => {
     }
 };
 exports.deleteBlog = deleteBlog;
+/*
+
+Fetch all the blogs for a particular user!
+
+
+*/
+const Fetchuser = async (req, res) => {
+    try {
+        const email = req.user?.email;
+        if (!email) {
+            return res.status(400).json({
+                message: "User email not found in request payload.",
+            });
+        }
+        // Fetch all blogs for that user (since one user can have many blogs)
+        const existingBlogs = await prisma_1.default.blog.findMany({
+            where: { userid: email },
+            orderBy: { createdAt: "desc" },
+        });
+        return res.status(200).json({
+            userid: email,
+            blogs: existingBlogs,
+        });
+    }
+    catch (err) {
+        console.error("Error fetching user blogs:", err);
+        return res.status(500).json({
+            message: "Internal server error",
+            details: err.message,
+        });
+    }
+};
+exports.Fetchuser = Fetchuser;

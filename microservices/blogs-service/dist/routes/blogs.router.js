@@ -26,4 +26,6 @@ router.get("/:id", blog_controller_1.getBlog);
 router.put("/:id", upload_1.upload.single("hero"), (0, validate_middleware_1.validateBody)(updateSchema), blog_controller_1.updateBlog);
 // Delete
 router.delete("/:id", blog_controller_1.deleteBlog);
+//Fetch the blogs of a particular user or the current user
+router.get("/myblogs", blog_controller_1.Fetchuser);
 exports.default = router;

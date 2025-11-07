@@ -6,6 +6,9 @@ import { uploadBuffer, deleteByPublicId } from "../utils/cloudinary";
  Create blog
  expects req.user.email from auth middleware
  optional req.file (multer memory)
+
+
+ user
  */
 export const createBlog = async (req: Request, res: Response) => {
   try {
@@ -50,6 +53,20 @@ export const getBlog = async (req: Request, res: Response) => {
   }
 };
 
+/*
+
+{
+        "id": 1,
+        "userid": "nayab25@gmail.com",
+        "title": "My First Blog",
+        "content": "This is my first blog post using microservices",
+        "heroUrl": null,
+        "heroPublicId": null,
+        "createdAt": "2025-11-06T07:35:05.205Z",
+        "updatedAt": "2025-11-06T07:35:05.205Z"
+    }
+
+*/
 export const getAllBlogs = async (req: Request, res: Response) => {
   try {
     const blogs = await prisma.blog.findMany({ orderBy: { createdAt: "desc" } });
@@ -121,5 +138,42 @@ export const deleteBlog = async (req: Request, res: Response) => {
     res.json({ message: "Deleted" });
   } catch (err: any) {
     res.status(500).json({ message: "Internal server error", details: err.message });
+  }
+};
+
+
+/*
+
+Fetch all the blogs for a particular user!
+
+
+*/
+
+export const Fetchuser = async (req: Request, res: Response) => {
+  try {
+    const email = req.user?.email as string;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "User email not found in request payload.",
+      });
+    }
+
+    // Fetch all blogs for that user (since one user can have many blogs)
+    const existingBlogs = await prisma.blog.findMany({
+      where: { userid: email },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.status(200).json({
+      userid: email,
+      blogs: existingBlogs,
+    });
+  } catch (err: any) {
+    console.error("Error fetching user blogs:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+      details: err.message,
+    });
   }
 };

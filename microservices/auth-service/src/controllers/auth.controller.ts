@@ -104,3 +104,20 @@ export const Signin = async (req: Request, res: Response) => {
 Get email and password,
 For logout best is to remove from the Frontend rather than the backend!
 */
+
+export const Getalluser = async (req:Request,res:Response) => {
+  try {
+    const allusers = await prisma.user.findMany({});
+    return res.status(200).json({
+      "message":"Succesfully fetched all the users! ",
+      "users": allusers
+    })
+  }
+  catch(err)
+  {
+    console.error("Error fetching users ", err);
+    return res.status(500).json({
+      "message":"Internal server error "
+    })
+  }
+}
